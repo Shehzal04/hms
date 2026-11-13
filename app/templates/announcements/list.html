@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Announcements & Notices{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+  <div>
+    <h4 class="fw-bold mb-0 text-dark">Hostel Notices & Announcements</h4>
+    <p class="text-muted small mb-0">Official updates, fee reminders, maintenance notices, and holiday announcements.</p>
+  </div>
+  {% if not current_user.is_student and not current_user.is_staff %}
+    <a href="{{ url_for('announcements.create_announcement') }}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+      <i class="bi bi-megaphone-fill me-1"></i> Publish Announcement
+    </a>
+  {% endif %}
+</div>
+
+<div class="row g-3">
+  {% for a in announcements %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card card-saas h-100 {% if a.priority == 'Urgent' %}border-danger{% elif a.priority == 'Important' %}border-warning{% endif %}">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="badge {% if a.priority == 'Urgent' %}bg-danger{% elif a.priority == 'Important' %}bg-warning text-dark{% else %}bg-primary{% endif %}">
+            {{ a.priority }} Notice
+          </span>
+          <span class="badge bg-light text-secondary border">Audience: {{ a.target_audience }}</span>
+        </div>
+        <div class="card-body p-3 d-flex flex-column justify-content-between">
+          <div>
+            <h6 class="fw-bold text-dark mb-2">{{ a.title }}</h6>
+            <p class="small text-secondary leading-relaxed mb-3">{{ a.content }}</p>
+          </div>
+          <div class="pt-2 border-top d-flex justify-content-between align-items-center small text-muted">
+            <span><i class="bi bi-person me-1"></i>{{ a.author_name }}</span>
+            <span><i class="bi bi-clock me-1"></i>{{ a.created_at|date_format }}</span>
+          </div>
+        </div>
+        {% if not current_user.is_student and not current_user.is_staff %}
+          <div class="card-footer bg-white border-top p-2 d-flex justify-content-between align-items-center">
+            <span class="small {% if a.is_active %}text-success{% else %}text-muted{% endif %}">
+              <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
+              {{ 'Active' if a.is_active else 'Archived' }}
+            </span>
+            <div class="d-flex gap-1">
+              <form method="POST" action="{{ url_for('announcements.toggle_announcement', announcement_id=a.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline-secondary btn-sm py-0 px-2" style="font-size: 0.75rem;">
+                  {{ 'Archive' if a.is_active else 'Activate' }}
+                </button>
+              </form>
+              <form method="POST" action="{{ url_for('announcements.delete_announcement', announcement_id=a.id) }}" onsubmit="return confirm('Permanently delete announcement?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size: 0.75rem;">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% else %}
+    <div class="col-12">
+      <div class="card card-saas text-center py-5">
+        <i class="bi bi-megaphone fs-1 text-muted mb-2"></i>
+        <h5 class="fw-bold">No Announcements Published</h5>
+        <p class="text-muted small">All hostel resident announcements and notices will appear here.</p>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

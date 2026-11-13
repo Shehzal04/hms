@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Issue Fee Invoice{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-0 text-dark">Issue Student Fee Invoice</h4>
+    <p class="text-muted small mb-0">Generate monthly hostel charges, security deposits, mess or utility invoices.</p>
+  </div>
+  <a href="{{ url_for('fees.list_invoices') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to Invoices
+  </a>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card card-saas">
+      <div class="card-body p-4">
+        <form method="POST">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Select Resident Student *</label>
+            {{ form.student_id(class="form-select") }}
+            {% for e in form.student_id.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Invoice Title / Description *</label>
+            {{ form.title(class="form-control", placeholder="e.g. Hostel & Mess Fee - November 2026") }}
+            {% for e in form.title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Fee Classification *</label>
+              {{ form.fee_type_id(class="form-select") }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Billing Amount (PKR) *</label>
+              {{ form.amount(class="form-control", type="number", min="1", placeholder="e.g. 15000") }}
+              {% for e in form.amount.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Issue Date *</label>
+              {{ form.issue_date(class="form-control", type="date") }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Due Date *</label>
+              {{ form.due_date(class="form-control", type="date") }}
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label small fw-semibold">Payment Instructions / Terms</label>
+            {{ form.notes(class="form-control", rows=2, placeholder="Please pay via 1Link or Accounts Office before the due date to avoid late payment surcharges.") }}
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+            <a href="{{ url_for('fees.list_invoices') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+            {{ form.submit(class="btn btn-primary px-5 shadow-sm") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

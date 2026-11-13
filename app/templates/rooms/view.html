@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Room {{ room.room_number }} - {{ room.hostel.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+  <div>
+    <div class="d-flex align-items-center gap-2">
+      <h4 class="fw-bold mb-0 text-dark">Room {{ room.room_number }}</h4>
+      <span class="badge {% if room.status == 'Available' %}bg-success{% elif room.status == 'Occupied' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+        {{ room.status }}
+      </span>
+      <span class="badge bg-light text-secondary border">{{ room.room_type }}</span>
+    </div>
+    <p class="text-muted small mb-0">{{ room.hostel.name }} &bull; Floor {{ room.floor_number }} &bull; Rent: {{ room.monthly_rent|currency }} / month</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('allocations.allocate_room') }}" class="btn btn-primary btn-sm">
+      <i class="bi bi-person-plus-fill me-1"></i> Allocate Bed
+    </a>
+    {% if current_user.can_manage_hostel %}
+      <a href="{{ url_for('rooms.edit_room', room_id=room.id) }}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-pencil me-1"></i> Edit Room
+      </a>
+      <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#addBedModal">
+        <i class="bi bi-plus-circle me-1"></i> Add Bed
+      </button>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Details & Facilities Header -->
+<div class="card card-saas mb-4">
+  <div class="card-body p-3">
+    <div class="row g-3 text-center text-sm-start">
+      <div class="col-sm-3 border-end">
+        <span class="text-muted small">Total Bed Capacity</span>
+        <h5 class="fw-bold mb-0 text-dark mt-1">{{ room.total_beds }} Beds</h5>
+      </div>
+      <div class="col-sm-3 border-end">
+        <span class="text-muted small">Occupied Beds</span>
+        <h5 class="fw-bold mb-0 text-danger mt-1">{{ room.occupied_beds_count }} Occupied</h5>
+      </div>
+      <div class="col-sm-3 border-end">
+        <span class="text-muted small">Available Beds</span>
+        <h5 class="fw-bold mb-0 text-success mt-1">{{ room.available_beds_count }} Available</h5>
+      </div>
+      <div class="col-sm-3">
+        <span class="text-muted small">Facilities & Amenities</span>
+        <div class="small fw-medium text-dark mt-1 text-truncate">{{ room.facilities or 'Standard' }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Visual Bed Matrix -->
+<div class="card card-saas mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span class="fw-bold"><i class="bi bi-grid-fill text-primary me-2"></i>Bed Space Visualization</span>
+    <div class="d-flex gap-3 small">
+      <span class="d-flex align-items-center gap-1"><span class="badge bg-success p-1 rounded-circle"></span> Available</span>
+      <span class="d-flex align-items-center gap-1"><span class="badge bg-danger p-1 rounded-circle"></span> Occupied</span>
+      <span class="d-flex align-items-center gap-1"><span class="badge bg-warning p-1 rounded-circle"></span> Maintenance</span>
+    </div>
+  </div>
+  <div class="card-body p-4">
+    <div class="row g-3">
+      {% for bed in beds %}
+        <div class="col-md-6 col-lg-3">
+          <div class="bed-box {% if bed.status == 'Available' %}available{% elif bed.status == 'Occupied' %}occupied{% else %}maintenance{% endif %} h-100 d-flex flex-column justify-content-between">
+            <div>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <strong class="text-dark">{{ bed.bed_number }}</strong>
+                <span class="badge {% if bed.status == 'Available' %}bg-success{% elif bed.status == 'Occupied' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                  {{ bed.status }}
+                </span>
+              </div>
+
+              {% if bed.status == 'Occupied' and bed.current_allocation %}
+                {% set resident = bed.current_allocation.student %}
+                <div class="text-start mt-2 pt-2 border-top">
+                  <div class="small fw-bold text-dark text-truncate">{{ resident.full_name }}</div>
+                  <small class="text-muted d-block">{{ resident.student_id_code }}</small>
+                  <small class="text-muted d-block"><i class="bi bi-calendar3 me-1"></i>Since: {{ bed.current_allocation.check_in_date|date_format }}</small>
+                </div>
+              {% else %}
+                <div class="text-muted small py-3">
+                  <i class="bi bi-check-circle text-success fs-4 d-block mb-1"></i>
+                  Vacant Bed Space
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
+              {% if bed.status == 'Occupied' and bed.current_allocation %}
+                <a href="{{ url_for('students.view_student', student_id=bed.current_allocation.student_id) }}" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size: 0.75rem;">
+                  Profile
+                </a>
+                <a href="{{ url_for('allocations.checkout_allocation', allocation_id=bed.current_allocation.id) }}" class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size: 0.75rem;">
+                  Checkout
+                </a>
+              {% elif bed.status == 'Available' %}
+                <a href="{{ url_for('allocations.allocate_room') }}" class="btn btn-primary btn-sm py-0 px-2 w-100" style="font-size: 0.75rem;">
+                  Allocate
+                </a>
+              {% endif %}
+              
+              {% if current_user.can_manage_hostel and bed.status != 'Occupied' %}
+                <form method="POST" action="{{ url_for('rooms.toggle_bed_maintenance', bed_id=bed.id) }}" class="ms-1">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-outline-secondary btn-sm py-0 px-1" title="Toggle Maintenance" style="font-size: 0.75rem;">
+                    <i class="bi bi-wrench"></i>
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Bed -->
+<div class="modal fade" id="addBedModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Add Additional Bed to Room {{ room.room_number }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{{ url_for('rooms.add_bed', room_id=room.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Bed Identifier / Number *</label>
+            {{ bed_form.bed_number(class="form-control", placeholder=f"Bed-{beds|length + 1}") }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Initial Status</label>
+            {{ bed_form.status(class="form-select") }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          {{ bed_form.submit(class="btn btn-primary btn-sm") }}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

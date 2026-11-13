@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Weekly Mess Menu{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+  <div>
+    <h4 class="fw-bold mb-0 text-dark">Weekly Mess Schedule & Menu</h4>
+    <p class="text-muted small mb-0">Daily breakfast, lunch, and dinner meal plans for hostel residents.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('mess.list_subscriptions') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+      <i class="bi bi-people me-1"></i> Mess Subscriptions
+    </a>
+  </div>
+</div>
+
+<!-- Weekly Grid -->
+<div class="card card-saas">
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle mb-0 text-center">
+      <thead class="bg-light">
+        <tr>
+          <th style="width: 140px;" class="py-3">Day</th>
+          <th class="py-3" style="width: 28%;"><i class="bi bi-sunrise-fill text-warning me-1"></i> Breakfast</th>
+          <th class="py-3" style="width: 28%;"><i class="bi bi-sun-fill text-primary me-1"></i> Lunch</th>
+          <th class="py-3" style="width: 28%;"><i class="bi bi-moon-stars-fill text-purple me-1"></i> Dinner</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for day in days %}
+          <tr>
+            <td class="bg-light fw-bold text-dark py-3">{{ day }}</td>
+            {% for meal in meals %}
+              {% set item = schedule[day][meal] %}
+              <td class="text-start p-3 position-relative">
+                {% if item %}
+                  <div class="fw-semibold text-dark mb-1">{{ item.menu_items }}</div>
+                  {% if item.timing %}
+                    <small class="text-muted d-block"><i class="bi bi-clock me-1"></i>{{ item.timing }}</small>
+                  {% endif %}
+                  {% if item.special_note %}
+                    <small class="text-info d-block fst-italic">{{ item.special_note }}</small>
+                  {% endif %}
+                {% else %}
+                  <span class="text-muted small fst-italic">Standard Meal</span>
+                {% endif %}
+
+                {% if not current_user.is_student %}
+                  <div class="mt-2 text-end">
+                    <a href="{{ url_for('mess.edit_meal_menu', day=day, meal=meal) }}" class="btn btn-link btn-sm text-decoration-none py-0 px-1" title="Edit Meal">
+                      <i class="bi bi-pencil-square"></i> Edit
+                    </a>
+                  </div>
+                {% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

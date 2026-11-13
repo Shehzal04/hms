@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+  <div>
+    <h4 class="fw-bold mb-0 text-dark">Executive Operations Dashboard</h4>
+    <p class="text-muted small mb-0">Real-time overview of hostel residency, facilities, finances, and security.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('students.add_student') }}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+      <i class="bi bi-person-plus-fill me-1"></i> Enroll Student
+    </a>
+    <a href="{{ url_for('allocations.allocate_room') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+      <i class="bi bi-door-open me-1"></i> Allocate Bed
+    </a>
+    <a href="{{ url_for('fees.record_payment') }}" class="btn btn-outline-success btn-sm rounded-pill px-3">
+      <i class="bi bi-cash-stack me-1"></i> Collect Fee
+    </a>
+  </div>
+</div>
+
+<!-- Key Performance Metric Cards (Row 1) -->
+<div class="row g-3 mb-4">
+  <!-- Total Students -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div>
+        <div class="text-muted small fw-semibold text-uppercase">Total Students</div>
+        <div class="fs-3 fw-bold text-dark mt-1">{{ total_students }}</div>
+        <div class="text-success small fw-medium mt-1">
+          <i class="bi bi-person-check-fill me-1"></i> Active Residents
+        </div>
+      </div>
+      <div class="stat-icon blue">
+        <i class="bi bi-people-fill"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Room Occupancy & Capacity -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div>
+        <div class="text-muted small fw-semibold text-uppercase">Room Occupancy</div>
+        <div class="fs-3 fw-bold text-dark mt-1">{{ occupied_beds }} / {{ total_capacity }}</div>
+        <div class="text-muted small mt-1">
+          <span class="badge bg-soft-primary text-primary">{{ occupancy_percentage }}% full</span> &bull; {{ available_beds }} free
+        </div>
+      </div>
+      <div class="stat-icon purple">
+        <i class="bi bi-door-closed-fill"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monthly Collection -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div>
+        <div class="text-muted small fw-semibold text-uppercase">Monthly Fee Collection</div>
+        <div class="fs-3 fw-bold text-dark mt-1">{{ monthly_collection|currency }}</div>
+        <div class="text-success small fw-medium mt-1">
+          <i class="bi bi-arrow-up-right me-1"></i> Current Month
+        </div>
+      </div>
+      <div class="stat-icon green">
+        <i class="bi bi-cash-coin"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Payments -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div>
+        <div class="text-muted small fw-semibold text-uppercase">Pending Payments</div>
+        <div class="fs-3 fw-bold text-danger mt-1">{{ pending_payments|currency }}</div>
+        <div class="text-danger small fw-medium mt-1">
+          <i class="bi bi-exclamation-circle me-1"></i> Outstanding Invoices
+        </div>
+      </div>
+      <div class="stat-icon red">
+        <i class="bi bi-receipt-cutoff"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Secondary Metric Cards (Row 2) -->
+<div class="row g-3 mb-4">
+  <!-- Total Rooms -->
+  <div class="col-sm-6 col-md-3">
+    <div class="card card-saas p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="text-muted small fw-semibold">Total Rooms</span>
+          <h5 class="fw-bold mb-0 mt-1">{{ total_rooms }} Rooms</h5>
+        </div>
+        <span class="badge badge-soft-info p-2"><i class="bi bi-grid-3x3-gap-fill fs-5"></i></span>
+      </div>
+      <div class="small text-muted mt-2">
+        <span class="text-success fw-medium">{{ available_beds }} Beds</span> ready for allocation
+      </div>
+    </div>
+  </div>
+
+  <!-- Today's Attendance -->
+  <div class="col-sm-6 col-md-3">
+    <div class="card card-saas p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="text-muted small fw-semibold">Today's Attendance</span>
+          <h5 class="fw-bold mb-0 mt-1">{{ today_present }} Present ({{ today_attendance_rate }}%)</h5>
+        </div>
+        <span class="badge badge-soft-success p-2"><i class="bi bi-calendar-check-fill fs-5"></i></span>
+      </div>
+      <div class="small text-muted mt-2">
+        <span class="text-danger">{{ today_absent }} Absent</span> &bull; <span class="text-warning">{{ today_leave }} On Leave</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Complaints -->
+  <div class="col-sm-6 col-md-3">
+    <div class="card card-saas p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="text-muted small fw-semibold">Open Complaints</span>
+          <h5 class="fw-bold mb-0 mt-1 text-warning">{{ pending_complaints }} Pending</h5>
+        </div>
+        <span class="badge badge-soft-warning p-2"><i class="bi bi-tools fs-5"></i></span>
+      </div>
+      <div class="small text-muted mt-2">
+        Maintenance & electrical tickets
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Employees & Visitors -->
+  <div class="col-sm-6 col-md-3">
+    <div class="card card-saas p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="text-muted small fw-semibold">Staff & Visitors</span>
+          <h5 class="fw-bold mb-0 mt-1">{{ total_employees }} Staff &bull; {{ active_visitors }} Inside</h5>
+        </div>
+        <span class="badge badge-soft-secondary p-2"><i class="bi bi-shield-check fs-5"></i></span>
+      </div>
+      <div class="small text-muted mt-2">
+        {{ active_visitors }} visitors verified at main gate
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Interactive Chart.js Visualizations (Row 3) -->
+<div class="row g-3 mb-4">
+  <!-- Revenue Trend Line Chart -->
+  <div class="col-lg-8">
+    <div class="card card-saas h-100">
+      <div class="card-header">
+        <span><i class="bi bi-graph-up-arrow text-primary me-2"></i>Monthly Revenue & Collection Trend</span>
+        <span class="badge bg-light text-secondary border">Last 6 Months</span>
+      </div>
+      <div class="card-body p-3">
+        <div style="height: 280px;">
+          <canvas id="revenueChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Room Occupancy Doughnut Chart -->
+  <div class="col-lg-4">
+    <div class="card card-saas h-100">
+      <div class="card-header">
+        <span><i class="bi bi-pie-chart-fill text-primary me-2"></i>Bed Occupancy Ratio</span>
+      </div>
+      <div class="card-body p-3">
+        <div style="height: 280px;">
+          <canvas id="occupancyChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Secondary Charts (Row 4) -->
+<div class="row g-3 mb-4">
+  <!-- Admissions by Department -->
+  <div class="col-lg-6">
+    <div class="card card-saas h-100">
+      <div class="card-header">
+        <span><i class="bi bi-bar-chart-fill text-primary me-2"></i>Student Admissions by Faculty</span>
+      </div>
+      <div class="card-body p-3">
+        <div style="height: 250px;">
+          <canvas id="admissionsChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attendance Overview -->
+  <div class="col-lg-6">
+    <div class="card card-saas h-100">
+      <div class="card-header">
+        <span><i class="bi bi-check-circle-fill text-success me-2"></i>Attendance Statistics (Last 30 Days)</span>
+      </div>
+      <div class="card-body p-3">
+        <div style="height: 250px;">
+          <canvas id="attendanceChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hostels Overview Cards -->
+<div class="card card-saas mb-4">
+  <div class="card-header">
+    <span class="fw-bold"><i class="bi bi-buildings text-primary me-2"></i>Hostel Buildings Summary</span>
+    <a href="{{ url_for('hostels.list_hostels') }}" class="btn btn-outline-primary btn-sm">View All Hostels</a>
+  </div>
+  <div class="card-body p-3">
+    <div class="row g-3">
+      {% for h in hostels_summary %}
+        <div class="col-md-4">
+          <div class="border rounded-3 p-3 bg-light">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h6 class="fw-bold mb-0 text-dark">{{ h.name }}</h6>
+              <span class="badge {% if h.hostel_type == 'Boys' %}bg-primary{% else %}bg-danger{% endif %}">{{ h.hostel_type }}</span>
+            </div>
+            <p class="small text-muted mb-2"><i class="bi bi-geo-alt me-1"></i>{{ h.address }}</p>
+            <div class="d-flex justify-content-between small text-secondary mb-1">
+              <span>Beds: {{ h.occupied_beds_count }} / {{ h.total_beds_count }}</span>
+              <span class="fw-semibold text-primary">{{ h.occupancy_rate }}%</span>
+            </div>
+            <div class="progress" style="height: 6px;">
+              <div class="progress-bar bg-primary" role="progressbar" style="width: {{ h.occupancy_rate }}%"></div>
+            </div>
+            <div class="d-flex justify-content-between small text-muted mt-2 pt-1 border-top">
+              <span>Warden: {{ h.warden_name or 'Assigned' }}</span>
+              <a href="{{ url_for('hostels.view_hostel', hostel_id=h.id) }}" class="fw-semibold text-decoration-none">Manage &rarr;</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Real-Time Recent Activity Tables (Row 5) -->
+<div class="row g-3">
+  <!-- Recent Admissions -->
+  <div class="col-lg-6">
+    <div class="card card-saas h-100">
+      <div class="card-header">
+        <span class="fw-bold"><i class="bi bi-person-badge text-primary me-2"></i>Recent Student Admissions</span>
+        <a href="{{ url_for('students.list_students') }}" class="btn btn-link btn-sm text-decoration-none">View All</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Program</th>
+              <th>Hostel / Room</th>
+              <th>Admitted</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in recent_admissions %}
+              <tr>
+                <td>
+                  <div class="fw-semibold text-dark">{{ s.full_name }}</div>
+                  <small class="text-muted">{{ s.student_id_code }}</small>
+                </td>
+                <td>
+                  <div class="small fw-medium">{{ s.degree_program }}</div>
+                  <small class="text-muted">{{ s.university_name[:20] }}...</small>
+                </td>
+                <td>
+                  {% if s.current_room %}
+                    <span class="badge badge-soft-primary">Rm {{ s.current_room.room_number }}</span>
+                  {% else %}
+                    <span class="badge badge-soft-warning">Unassigned</span>
+                  {% endif %}
+                </td>
+                <td class="small text-muted">{{ s.admission_date|date_format }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="4" class="text-center py-3 text-muted">No recent admissions found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Payments -->
+  <div class="col-lg-6">
+    <div class="card card-saas h-100">
+      <div class="card-header">
+        <span class="fw-bold"><i class="bi bi-wallet2 text-success me-2"></i>Recent Fee Payments</span>
+        <a href="{{ url_for('fees.list_payments') }}" class="btn btn-link btn-sm text-decoration-none">View All</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-custom table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Receipt</th>
+              <th>Student</th>
+              <th>Amount</th>
+              <th>Method</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in recent_payments %}
+              <tr>
+                <td>
+                  <span class="fw-semibold text-primary">{{ p.receipt_number }}</span>
+                  <div class="small text-muted">{{ p.payment_date|date_format }}</div>
+                </td>
+                <td>
+                  <div class="fw-medium text-dark">{{ p.student.full_name }}</div>
+                  <small class="text-muted">{{ p.student.student_id_code }}</small>
+                </td>
+                <td class="fw-bold text-success">{{ p.amount|currency }}</td>
+                <td><span class="badge badge-soft-secondary">{{ p.payment_method }}</span></td>
+                <td>
+                  <a href="{{ url_for('fees.view_receipt', payment_id=p.id) }}" class="btn btn-outline-primary btn-sm py-0 px-2" title="View / Print Receipt">
+                    <i class="bi bi-receipt"></i>
+                  </a>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="5" class="text-center py-3 text-muted">No recent payments recorded.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
