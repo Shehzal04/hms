@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-0 text-dark">{{ title }}</h4>
+    <p class="text-muted small mb-0">Create new administrative portal users with assigned role permissions.</p>
+  </div>
+  <a href="{{ url_for('settings.list_users') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to Users
+  </a>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="card card-saas">
+      <div class="card-body p-4">
+        <form method="POST">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Username *</label>
+            {{ form.username(class="form-control", placeholder="e.g. warden_usman") }}
+            {% for e in form.username.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Full Name *</label>
+            {{ form.full_name(class="form-control", placeholder="e.g. Usman Tariq") }}
+            {% for e in form.full_name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Email Address *</label>
+            {{ form.email(class="form-control", placeholder="e.g. usman@hostel.edu.pk") }}
+            {% for e in form.email.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Role *</label>
+            {{ form.role_id(class="form-select") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Password *</label>
+            {{ form.password(class="form-control", placeholder="Minimum 6 characters") }}
+          </div>
+
+          <div class="mb-4">
+            <div class="form-check">
+              {{ form.is_active(class="form-check-input", id="activeUser") }}
+              <label class="form-check-label small fw-semibold" for="activeUser">Account Active & Enabled</label>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+            <a href="{{ url_for('settings.list_users') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+            {{ form.submit(class="btn btn-primary px-5 shadow-sm") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

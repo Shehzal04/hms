@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}My Complaints{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+  <div>
+    <h4 class="fw-bold mb-0 text-dark">Complaints & Maintenance Tickets</h4>
+    <p class="text-muted small mb-0">Submit maintenance requests, upload photos, track resolution progress, and rate repairs.</p>
+  </div>
+  <button class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#newComplaintModal">
+    <i class="bi bi-plus-circle me-1"></i> File New Complaint
+  </button>
+</div>
+
+<div class="row g-4">
+  <!-- My Complaints List -->
+  <div class="col-12">
+    <div class="card card-saas">
+      <div class="table-responsive">
+        <table class="table table-custom table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Ticket #</th>
+              <th>Category</th>
+              <th>Subject / Title</th>
+              <th>Priority</th>
+              <th>Filed On</th>
+              <th>Status</th>
+              <th>Admin / Staff Resolution</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in complaints %}
+              <tr>
+                <td class="fw-bold text-primary">{{ c.ticket_number }}</td>
+                <td><span class="badge badge-soft-info">{{ c.category }}</span></td>
+                <td>
+                  <div class="fw-semibold text-dark">{{ c.title }}</div>
+                  <small class="text-muted text-truncate d-block" style="max-width: 250px;">{{ c.description }}</small>
+                </td>
+                <td><span class="badge badge-soft-secondary">{{ c.priority }}</span></td>
+                <td class="small text-muted">{{ c.created_at|date_format }}</td>
+                <td>
+                  <span class="badge {% if c.status == 'Resolved' %}badge-soft-success{% elif c.status == 'In Progress' %}badge-soft-warning{% elif c.status == 'Rejected' %}badge-soft-danger{% else %}badge-soft-secondary{% endif %}">
+                    {{ c.status }}
+                  </span>
+                </td>
+                <td class="small text-muted">
+                  {{ c.admin_response or 'Awaiting review' }}
+                </td>
+                <td class="text-end">
+                  <a href="{{ url_for('complaints.view_complaint', complaint_id=c.id) }}" class="btn btn-outline-primary btn-sm py-0 px-2">
+                    View
+                  </a>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="8" class="text-center py-4 text-muted">You have not submitted any complaints yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: New Complaint -->
+<div class="modal fade" id="newComplaintModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Submit Complaint Ticket</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        <div class="modal-body">
+          <div class="row g-2 mb-3">
+            <div class="col-7">
+              <label class="form-label small fw-semibold">Complaint Category *</label>
+              {{ form.category(class="form-select") }}
+            </div>
+            <div class="col-5">
+              <label class="form-label small fw-semibold">Priority Level *</label>
+              {{ form.priority(class="form-select") }}
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Subject / Title *</label>
+            {{ form.title(class="form-control", placeholder="e.g. WiFi router in Room 102 not working") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Detailed Description of Issue *</label>
+            {{ form.description(class="form-control", rows=4, placeholder="Please describe the exact issue so the maintenance staff can bring correct tools.") }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Attach Photo (Optional)</label>
+            {{ form.image(class="form-control") }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          {{ form.submit(class="btn btn-primary btn-sm") }}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Complaints Management{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+  <div>
+    <h4 class="fw-bold mb-0 text-dark">Complaint & Maintenance Tickets</h4>
+    <p class="text-muted small mb-0">Track resident complaints, dispatch technicians, and manage resolutions.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <span class="badge badge-soft-danger px-3 py-2 fs-6">{{ pending_count }} Pending</span>
+    <span class="badge badge-soft-warning px-3 py-2 fs-6">{{ in_progress_count }} In Progress</span>
+    <span class="badge badge-soft-success px-3 py-2 fs-6">{{ resolved_count }} Resolved</span>
+  </div>
+</div>
+
+<!-- Filters Bar -->
+<div class="card card-saas mb-4">
+  <div class="card-body p-3">
+    <form method="GET" class="row g-2 align-items-center">
+      <div class="col-md-3">
+        <select name="status" class="form-select form-select-sm">
+          <option value="">All Statuses</option>
+          <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending Review</option>
+          <option value="In Progress" {% if status_filter == 'In Progress' %}selected{% endif %}>In Progress</option>
+          <option value="Resolved" {% if status_filter == 'Resolved' %}selected{% endif %}>Resolved</option>
+          <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select name="category" class="form-select form-select-sm">
+          <option value="">All Categories</option>
+          <option value="Electricity" {% if category == 'Electricity' %}selected{% endif %}>Electricity & Wiring</option>
+          <option value="Water" {% if category == 'Water' %}selected{% endif %}>Water Supply & Plumbing</option>
+          <option value="Internet" {% if category == 'Internet' %}selected{% endif %}>WiFi & Internet</option>
+          <option value="Room Maintenance" {% if category == 'Room Maintenance' %}selected{% endif %}>Room Maintenance</option>
+          <option value="Cleaning" {% if category == 'Cleaning' %}selected{% endif %}>Cleaning & Janitorial</option>
+          <option value="Food / Mess" {% if category == 'Food / Mess' %}selected{% endif %}>Food / Mess</option>
+          <option value="Security" {% if category == 'Security' %}selected{% endif %}>Security Concern</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select name="priority" class="form-select form-select-sm">
+          <option value="">All Priorities</option>
+          <option value="Low" {% if priority == 'Low' %}selected{% endif %}>Low</option>
+          <option value="Medium" {% if priority == 'Medium' %}selected{% endif %}>Medium</option>
+          <option value="High" {% if priority == 'High' %}selected{% endif %}>High</option>
+          <option value="Urgent" {% if priority == 'Urgent' %}selected{% endif %}>Urgent</option>
+        </select>
+      </div>
+      <div class="col-md-3 d-flex gap-1">
+        <button type="submit" class="btn btn-primary btn-sm w-100">Filter Tickets</button>
+        <a href="{{ url_for('complaints.list_complaints') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-counterclockwise"></i></a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="card card-saas">
+  <div class="table-responsive">
+    <table class="table table-custom table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Ticket #</th>
+          <th>Student / Room</th>
+          <th>Category</th>
+          <th>Subject / Title</th>
+          <th>Priority</th>
+          <th>Assigned Staff</th>
+          <th>Date Filed</th>
+          <th>Status</th>
+          <th class="text-end">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in complaints %}
+          <tr>
+            <td>
+              <a href="{{ url_for('complaints.view_complaint', complaint_id=c.id) }}" class="fw-bold text-primary text-decoration-none">
+                {{ c.ticket_number }}
+              </a>
+            </td>
+            <td>
+              <div class="fw-semibold text-dark">{{ c.student.full_name }}</div>
+              <small class="text-muted">
+                {% if c.student.current_room %}
+                  {{ c.student.current_hostel.name[:10] }} Rm {{ c.student.current_room.room_number }}
+                {% else %}
+                  Unallocated
+                {% endif %}
+              </small>
+            </td>
+            <td><span class="badge badge-soft-info">{{ c.category }}</span></td>
+            <td>
+              <div class="fw-medium text-dark text-truncate" style="max-width: 250px;">{{ c.title }}</div>
+              <small class="text-muted text-truncate d-block" style="max-width: 250px;">{{ c.description }}</small>
+            </td>
+            <td>
+              <span class="badge {% if c.priority == 'Urgent' %}badge-soft-danger fw-bold{% elif c.priority == 'High' %}badge-soft-warning{% else %}badge-soft-secondary{% endif %}">
+                {{ c.priority }}
+              </span>
+            </td>
+            <td class="small">
+              {% if c.assigned_employee %}
+                <span class="text-dark fw-medium">{{ c.assigned_employee.full_name }}</span>
+                <small class="text-muted d-block">{{ c.assigned_employee.designation }}</small>
+              {% else %}
+                <span class="text-muted fst-italic">Unassigned</span>
+              {% endif %}
+            </td>
+            <td class="small text-muted">{{ c.created_at|date_format }}</td>
+            <td>
+              <span class="badge {% if c.status == 'Resolved' %}badge-soft-success{% elif c.status == 'In Progress' %}badge-soft-warning{% elif c.status == 'Rejected' %}badge-soft-danger{% else %}badge-soft-secondary{% endif %}">
+                {{ c.status }}
+              </span>
+            </td>
+            <td class="text-end">
+              <a href="{{ url_for('complaints.view_complaint', complaint_id=c.id) }}" class="btn btn-outline-primary btn-sm py-0 px-2">
+                Manage &rarr;
+              </a>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="9" class="text-center py-4 text-muted">No complaint tickets found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pagination.pages > 1 %}
+    <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+      <small class="text-muted">Showing {{ complaints|length }} of {{ pagination.total }} tickets</small>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          {% if pagination.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('complaints.list_complaints', page=pagination.prev_num, status=status_filter, category=category, priority=priority) }}">Previous</a></li>
+          {% endif %}
+          {% for p in pagination.iter_pages() %}
+            {% if p %}
+              <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('complaints.list_complaints', page=p, status=status_filter, category=category, priority=priority) }}">{{ p }}</a>
+              </li>
+            {% endif %}
+          {% endfor %}
+          {% if pagination.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('complaints.list_complaints', page=pagination.next_num, status=status_filter, category=category, priority=priority) }}">Next</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

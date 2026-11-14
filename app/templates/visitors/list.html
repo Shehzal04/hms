@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Visitor Management{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+  <div>
+    <h4 class="fw-bold mb-0 text-dark">Hostel Visitor Gate Log</h4>
+    <p class="text-muted small mb-0">Record visitor check-ins, security identification checks, and departure clearances.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <span class="badge badge-soft-primary px-3 py-2 fs-6">
+      <i class="bi bi-people-fill me-1"></i> {{ inside_count }} Visitors Inside
+    </span>
+    <a href="{{ url_for('visitors.register_visitor') }}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+      <i class="bi bi-person-plus-fill me-1"></i> Register Visitor
+    </a>
+  </div>
+</div>
+
+<!-- Filters Bar -->
+<div class="card card-saas mb-4">
+  <div class="card-body p-3">
+    <form method="GET" class="row g-2 align-items-center">
+      <div class="col-md-3">
+        <select name="status" class="form-select form-select-sm">
+          <option value="inside" {% if status_filter == 'inside' %}selected{% endif %}>Currently Inside Premises</option>
+          <option value="departed" {% if status_filter == 'departed' %}selected{% endif %}>Departed / Checked Out</option>
+          <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Records</option>
+        </select>
+      </div>
+      <div class="col-md-7">
+        <input type="text" name="search" class="form-control form-control-sm" placeholder="Search visitor name, CNIC, student name..." value="{{ search }}">
+      </div>
+      <div class="col-md-2 d-flex gap-1">
+        <button type="submit" class="btn btn-primary btn-sm w-100">Filter</button>
+        <a href="{{ url_for('visitors.list_visitors') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-counterclockwise"></i></a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="card card-saas">
+  <div class="table-responsive">
+    <table class="table table-custom table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Visitor Name</th>
+          <th>CNIC / Phone</th>
+          <th>Student Visited</th>
+          <th>Relationship</th>
+          <th>Purpose of Visit</th>
+          <th>Check-in Time</th>
+          <th>Check-out Time</th>
+          <th>Security Officer</th>
+          <th class="text-end">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in visitors %}
+          <tr>
+            <td>
+              <div class="fw-semibold text-dark">{{ v.visitor_name }}</div>
+              <small class="badge badge-soft-success"><i class="bi bi-shield-check me-1"></i>CNIC Verified</small>
+            </td>
+            <td>
+              <div class="small text-dark">{{ v.cnic }}</div>
+              <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ v.phone_number }}</small>
+            </td>
+            <td>
+              <a href="{{ url_for('students.view_student', student_id=v.student.id) }}" class="fw-medium text-primary text-decoration-none">
+                {{ v.student.full_name }}
+              </a>
+              <small class="text-muted d-block">
+                {% if v.student.current_room %}
+                  {{ v.student.current_hostel.name[:10] }} Rm {{ v.student.current_room.room_number }}
+                {% endif %}
+              </small>
+            </td>
+            <td><span class="badge badge-soft-secondary">{{ v.relation }}</span></td>
+            <td class="small text-muted">{{ v.purpose }}</td>
+            <td class="small fw-medium text-dark">{{ v.check_in|datetime_format }}</td>
+            <td>
+              {% if v.check_out %}
+                <span class="small text-muted">{{ v.check_out|datetime_format }}</span>
+              {% else %}
+                <span class="badge badge-soft-warning">Inside Building</span>
+              {% endif %}
+            </td>
+            <td class="small text-muted">{{ v.security_officer }}</td>
+            <td class="text-end">
+              {% if v.is_currently_inside %}
+                <form method="POST" action="{{ url_for('visitors.checkout_visitor', visitor_id=v.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2">
+                    <i class="bi bi-box-arrow-right me-1"></i> Check-Out
+                  </button>
+                </form>
+              {% else %}
+                <span class="badge badge-soft-success">Departed</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="9" class="text-center py-4 text-muted">No visitor records found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pagination.pages > 1 %}
+    <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+      <small class="text-muted">Showing {{ visitors|length }} of {{ pagination.total }} records</small>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          {% if pagination.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('visitors.list_visitors', page=pagination.prev_num, status=status_filter, search=search) }}">Previous</a></li>
+          {% endif %}
+          {% for p in pagination.iter_pages() %}
+            {% if p %}
+              <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('visitors.list_visitors', page=p, status=status_filter, search=search) }}">{{ p }}</a>
+              </li>
+            {% endif %}
+          {% endfor %}
+          {% if pagination.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('visitors.list_visitors', page=pagination.next_num, status=status_filter, search=search) }}">Next</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Invoice {{ invoice.invoice_number }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+  <div>
+    <div class="d-flex align-items-center gap-2">
+      <h4 class="fw-bold mb-0 text-dark">Invoice #{{ invoice.invoice_number }}</h4>
+      <span class="badge {% if invoice.status == 'Paid' %}bg-success{% elif invoice.status == 'Partial' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+        {{ invoice.status }}
+      </span>
+    </div>
+    <p class="text-muted small mb-0">Issued: {{ invoice.issue_date|date_format }} &bull; Due: {{ invoice.due_date|date_format }}</p>
+  </div>
+  <div class="d-flex gap-2">
+    {% if invoice.status != 'Paid' %}
+      <a href="{{ url_for('fees.record_payment', invoice_id=invoice.id) }}" class="btn btn-success btn-sm">
+        <i class="bi bi-cash-stack me-1"></i> Collect Payment
+      </a>
+    {% endif %}
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm no-print">
+      <i class="bi bi-printer me-1"></i> Print Invoice
+    </button>
+  </div>
+</div>
+
+<div class="card card-saas printable-area mb-4">
+  <div class="card-body p-4 p-md-5">
+    <!-- Header -->
+    <div class="row align-items-center border-bottom pb-4 mb-4">
+      <div class="col-sm-6">
+        <h4 class="fw-bold text-primary mb-1"><i class="bi bi-buildings-fill me-2"></i>HOSTELFLOW HMS</h4>
+        <p class="text-muted small mb-0">Official Student Accommodation Invoice</p>
+      </div>
+      <div class="col-sm-6 text-sm-end mt-3 mt-sm-0">
+        <h5 class="fw-bold text-dark mb-0">{{ invoice.invoice_number }}</h5>
+        <div class="small text-muted">Date: {{ invoice.issue_date|date_format }}</div>
+        <div class="small fw-semibold text-danger">Due: {{ invoice.due_date|date_format }}</div>
+      </div>
+    </div>
+
+    <!-- Bill To Info -->
+    <div class="row mb-4">
+      <div class="col-sm-6">
+        <span class="text-muted small text-uppercase fw-semibold d-block">Billed To:</span>
+        <h6 class="fw-bold text-dark mb-1">{{ invoice.student.full_name }}</h6>
+        <div class="small text-muted"><strong>Student ID:</strong> {{ invoice.student.student_id_code }}</div>
+        <div class="small text-muted"><strong>CNIC:</strong> {{ invoice.student.cnic }}</div>
+        <div class="small text-muted"><strong>Phone:</strong> {{ invoice.student.phone_number }}</div>
+      </div>
+      <div class="col-sm-6 text-sm-end mt-3 mt-sm-0">
+        <span class="text-muted small text-uppercase fw-semibold d-block">Housing Details:</span>
+        {% set alloc = invoice.student.current_allocation %}
+        {% if alloc %}
+          <div class="small fw-semibold text-dark">{{ alloc.room.hostel.name }}</div>
+          <div class="small text-muted">Room {{ alloc.room.room_number }} ({{ alloc.bed.bed_number }})</div>
+          <div class="small text-muted">{{ alloc.room.room_type }}</div>
+        {% else %}
+          <div class="small text-muted">Not currently allocated</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="table-responsive mb-4">
+      <table class="table table-bordered align-middle">
+        <thead class="bg-light">
+          <tr>
+            <th>Description</th>
+            <th>Classification</th>
+            <th class="text-end" style="width: 160px;">Amount (PKR)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in invoice.items.all() %}
+            <tr>
+              <td>
+                <div class="fw-semibold text-dark">{{ item.description }}</div>
+              </td>
+              <td><span class="badge badge-soft-info">{{ item.fee_type.name }}</span></td>
+              <td class="text-end fw-semibold">{{ item.amount|currency }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td><div class="fw-semibold">{{ invoice.title }}</div></td>
+              <td>General Hostel Fee</td>
+              <td class="text-end fw-semibold">{{ invoice.total_amount|currency }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="border-top-2">
+          <tr>
+            <td colspan="2" class="text-end fw-bold">Subtotal:</td>
+            <td class="text-end fw-bold">{{ invoice.total_amount|currency }}</td>
+          </tr>
+          {% if invoice.late_fine > 0 %}
+            <tr>
+              <td colspan="2" class="text-end fw-bold text-danger">Late Surcharge Fine:</td>
+              <td class="text-end fw-bold text-danger">{{ invoice.late_fine|currency }}</td>
+            </tr>
+          {% endif %}
+          <tr>
+            <td colspan="2" class="text-end fw-bold text-success">Total Amount Paid:</td>
+            <td class="text-end fw-bold text-success">{{ invoice.paid_amount|currency }}</td>
+          </tr>
+          <tr class="table-light">
+            <td colspan="2" class="text-end fw-bold fs-6">Remaining Balance Due:</td>
+            <td class="text-end fw-bold fs-6 text-danger">{{ invoice.balance_due|currency }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    {% if invoice.notes %}
+      <div class="alert alert-light border small text-muted mb-4">
+        <strong>Terms & Instructions:</strong> {{ invoice.notes }}
+      </div>
+    {% endif %}
+
+    <!-- Associated Payments Log -->
+    <div class="mt-4 pt-3 border-top">
+      <h6 class="fw-bold text-dark mb-3"><i class="bi bi-clock-history me-1"></i>Payment Transactions Log</h6>
+      {% if payments %}
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle mb-0">
+            <thead>
+              <tr class="text-muted small">
+                <th>Receipt #</th>
+                <th>Date</th>
+                <th>Method</th>
+                <th>Txn ID</th>
+                <th>Received By</th>
+                <th class="text-end">Amount</th>
+                <th class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in payments %}
+                <tr>
+                  <td><span class="fw-semibold text-primary">{{ p.receipt_number }}</span></td>
+                  <td>{{ p.payment_date|date_format }}</td>
+                  <td><span class="badge badge-soft-secondary">{{ p.payment_method }}</span></td>
+                  <td class="small text-muted">{{ p.transaction_id or 'Cash' }}</td>
+                  <td class="small">{{ p.received_by }}</td>
+                  <td class="text-end fw-bold text-success">{{ p.amount|currency }}</td>
+                  <td class="text-end">
+                    <a href="{{ url_for('fees.view_receipt', payment_id=p.id) }}" class="btn btn-outline-primary btn-sm py-0 px-2">
+                      Receipt
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-muted small mb-0">No payment transactions recorded against this invoice yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Staff Management{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+  <div>
+    <h4 class="fw-bold mb-0 text-dark">Staff & Employee Directory</h4>
+    <p class="text-muted small mb-0">Manage wardens, security personnel, electricians, plumbers, cleaners, and accountants.</p>
+  </div>
+  {% if current_user.can_manage_hostel %}
+    <a href="{{ url_for('staff.add_employee') }}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+      <i class="bi bi-person-plus-fill me-1"></i> Register Employee
+    </a>
+  {% endif %}
+</div>
+
+<!-- Filters Bar -->
+<div class="card card-saas mb-4">
+  <div class="card-body p-3">
+    <form method="GET" class="row g-2 align-items-center">
+      <div class="col-md-4">
+        <select name="designation" class="form-select form-select-sm">
+          <option value="">All Designations</option>
+          {% for d in designations %}
+            <option value="{{ d }}" {% if selected_designation == d %}selected{% endif %}>{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select name="status" class="form-select form-select-sm">
+          <option value="">All Statuses</option>
+          <option value="Active" {% if selected_status == 'Active' %}selected{% endif %}>Active</option>
+          <option value="On Leave" {% if selected_status == 'On Leave' %}selected{% endif %}>On Leave</option>
+          <option value="Resigned" {% if selected_status == 'Resigned' %}selected{% endif %}>Resigned</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <input type="text" name="search" class="form-control form-control-sm" placeholder="Search by name, emp code, CNIC, phone..." value="{{ search }}">
+      </div>
+      <div class="col-md-2 d-flex gap-1">
+        <button type="submit" class="btn btn-primary btn-sm w-100">Filter</button>
+        <a href="{{ url_for('staff.list_employees') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-counterclockwise"></i></a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Employees Table -->
+<div class="card card-saas">
+  <div class="table-responsive">
+    <table class="table table-custom table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Designation</th>
+          <th>CNIC / Phone</th>
+          <th>Shift</th>
+          <th>Base Salary</th>
+          <th>Joining Date</th>
+          <th>Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in employees %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="rounded-circle bg-light border text-primary d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">
+                  {{ e.full_name[:1] }}
+                </div>
+                <div>
+                  <a href="{{ url_for('staff.view_employee', employee_id=e.id) }}" class="fw-semibold text-dark text-decoration-none">
+                    {{ e.full_name }}
+                  </a>
+                  <small class="text-muted d-block">{{ e.employee_code }}</small>
+                </div>
+              </div>
+            </td>
+            <td><span class="badge badge-soft-primary">{{ e.designation }}</span></td>
+            <td>
+              <div class="small text-dark">{{ e.cnic }}</div>
+              <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ e.phone_number }}</small>
+            </td>
+            <td><small class="text-muted">{{ e.duty_shift }}</small></td>
+            <td class="fw-bold text-dark">{{ e.salary|currency }}</td>
+            <td class="small text-muted">{{ e.joining_date|date_format }}</td>
+            <td>
+              <span class="badge {% if e.status == 'Active' %}badge-soft-success{% elif e.status == 'On Leave' %}badge-soft-warning{% else %}badge-soft-secondary{% endif %}">
+                {{ e.status }}
+              </span>
+            </td>
+            <td class="text-end">
+              <a href="{{ url_for('staff.view_employee', employee_id=e.id) }}" class="btn btn-outline-primary btn-sm py-0 px-2">
+                Duties &rarr;
+              </a>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8" class="text-center py-4 text-muted">No staff records found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pagination.pages > 1 %}
+    <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3">
+      <small class="text-muted">Showing {{ employees|length }} of {{ pagination.total }} employees</small>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          {% if pagination.has_prev %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('staff.list_employees', page=pagination.prev_num, designation=selected_designation, status=selected_status, search=search) }}">Previous</a></li>
+          {% endif %}
+          {% for p in pagination.iter_pages() %}
+            {% if p %}
+              <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('staff.list_employees', page=p, designation=selected_designation, status=selected_status, search=search) }}">{{ p }}</a>
+              </li>
+            {% endif %}
+          {% endfor %}
+          {% if pagination.has_next %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('staff.list_employees', page=pagination.next_num, designation=selected_designation, status=selected_status, search=search) }}">Next</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

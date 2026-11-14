@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}{{ hostel.name }} - Details{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+  <div>
+    <div class="d-flex align-items-center gap-2">
+      <h4 class="fw-bold mb-0 text-dark">{{ hostel.name }}</h4>
+      <span class="badge {% if hostel.hostel_type == 'Boys' %}bg-primary{% elif hostel.hostel_type == 'Girls' %}bg-danger{% else %}bg-purple{% endif %}">
+        {{ hostel.hostel_type }} Hostel
+      </span>
+    </div>
+    <p class="text-muted small mb-0"><i class="bi bi-geo-alt me-1"></i>{{ hostel.address }} &bull; Contact: {{ hostel.contact_number }}</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('rooms.add_room') }}" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-circle me-1"></i> Add Room to Building
+    </a>
+    {% if current_user.can_manage_hostel %}
+      <a href="{{ url_for('hostels.edit_hostel', hostel_id=hostel.id) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-pencil me-1"></i> Edit Building
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Stats Bar -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card card-saas p-3 text-center">
+      <span class="text-muted small text-uppercase fw-semibold">Total Rooms</span>
+      <h4 class="fw-bold mb-0 text-dark mt-1">{{ hostel.total_rooms_count }}</h4>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card card-saas p-3 text-center">
+      <span class="text-muted small text-uppercase fw-semibold">Total Bed Capacity</span>
+      <h4 class="fw-bold mb-0 text-dark mt-1">{{ hostel.total_beds_count }} Beds</h4>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card card-saas p-3 text-center">
+      <span class="text-muted small text-uppercase fw-semibold">Occupied Beds</span>
+      <h4 class="fw-bold mb-0 text-danger mt-1">{{ hostel.occupied_beds_count }} ({{ hostel.occupancy_rate }}%)</h4>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card card-saas p-3 text-center">
+      <span class="text-muted small text-uppercase fw-semibold">Available Beds</span>
+      <h4 class="fw-bold mb-0 text-success mt-1">{{ hostel.available_beds_count }} Available</h4>
+    </div>
+  </div>
+</div>
+
+<!-- Floor-by-Floor Rooms Breakdown -->
+<div class="card card-saas">
+  <div class="card-header">
+    <span class="fw-bold"><i class="bi bi-layers-fill text-primary me-2"></i>Floor & Room Allocations Matrix</span>
+  </div>
+  <div class="card-body p-4">
+    {% for floor_num, floor_rooms in floors.items() %}
+      <div class="mb-4">
+        <h6 class="fw-bold text-dark border-bottom pb-2 d-flex justify-content-between">
+          <span><i class="bi bi-chevron-right text-primary me-1"></i>Floor {{ floor_num }}</span>
+          <span class="badge bg-light text-secondary border">{{ floor_rooms|length }} Rooms</span>
+        </h6>
+        <div class="row g-3 mt-1">
+          {% for r in floor_rooms %}
+            <div class="col-sm-6 col-md-4 col-lg-3">
+              <div class="border rounded-3 p-3 bg-white shadow-sm h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <strong class="text-dark fs-6">Room {{ r.room_number }}</strong>
+                  <span class="badge {% if r.status == 'Available' %}bg-success{% elif r.status == 'Occupied' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                    {{ r.status }}
+                  </span>
+                </div>
+                <div class="small text-muted mb-2">{{ r.room_type }} &bull; {{ r.monthly_rent|currency }}/mo</div>
+                <div class="small text-muted mb-3">
+                  <i class="bi bi-person-check me-1"></i>
+                  <strong>{{ r.occupied_beds_count }} / {{ r.total_beds }}</strong> Beds Occupied
+                </div>
+                <div class="d-flex justify-content-between pt-2 border-top">
+                  <a href="{{ url_for('rooms.view_room', room_id=r.id) }}" class="btn btn-outline-primary btn-sm w-100 py-1">
+                    Manage Beds &rarr;
+                  </a>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% else %}
+      <div class="text-center py-4 text-muted">
+        <i class="bi bi-door-closed fs-2 d-block mb-2"></i>
+        No rooms registered in this building yet.
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

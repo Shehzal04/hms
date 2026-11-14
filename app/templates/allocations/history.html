@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Room Transfer History{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-0 text-dark">Room Transfer History</h4>
+    <p class="text-muted small mb-0">Complete historical audit trail of resident room relocations and approved changes.</p>
+  </div>
+  <a href="{{ url_for('allocations.list_allocations') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to Allocations
+  </a>
+</div>
+
+<div class="card card-saas">
+  <div class="table-responsive">
+    <table class="table table-custom table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Transfer Date</th>
+          <th>Student</th>
+          <th>From Room / Bed</th>
+          <th>To Room / Bed</th>
+          <th>Reason</th>
+          <th>Approved By</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in transfers %}
+          <tr>
+            <td class="fw-medium text-dark">{{ t.transfer_date|date_format }}</td>
+            <td>
+              <div class="fw-semibold text-dark">{{ t.student.full_name }}</div>
+              <small class="text-muted">{{ t.student.student_id_code }}</small>
+            </td>
+            <td>
+              <span class="badge badge-soft-secondary">
+                {{ t.from_room.hostel.name }} Rm {{ t.from_room.room_number }} ({{ t.from_bed.bed_number }})
+              </span>
+            </td>
+            <td>
+              <span class="badge badge-soft-success">
+                {{ t.to_room.hostel.name }} Rm {{ t.to_room.room_number }} ({{ t.to_bed.bed_number }})
+              </span>
+            </td>
+            <td class="small text-muted">{{ t.reason }}</td>
+            <td class="small fw-medium">{{ t.approved_by }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="6" class="text-center py-4 text-muted">No room transfer records logged yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

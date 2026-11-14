@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Receipt {{ payment.receipt_number }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 no-print">
+  <div>
+    <h4 class="fw-bold mb-0 text-dark">Official Payment Receipt</h4>
+    <p class="text-muted small mb-0">Acknowledged payment receipt & financial audit voucher.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('fees.download_receipt_pdf', payment_id=payment.id) }}" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
+    </a>
+    <button onclick="window.print()" class="btn btn-secondary btn-sm">
+      <i class="bi bi-printer me-1"></i> Print Voucher
+    </button>
+  </div>
+</div>
+
+<div class="card card-saas printable-area mx-auto" style="max-width: 800px;">
+  <div class="card-body p-4 p-md-5">
+    <!-- Receipt Header -->
+    <div class="text-center border-bottom pb-4 mb-4">
+      <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+        <i class="bi bi-buildings-fill text-primary fs-3"></i>
+        <h3 class="fw-bold mb-0 text-dark">HOSTELFLOW MANAGEMENT SYSTEM</h3>
+      </div>
+      <p class="text-muted small mb-0">Official Student Housing Payment Acknowledgment Voucher</p>
+    </div>
+
+    <!-- Metadata Grid -->
+    <div class="row g-3 mb-4">
+      <div class="col-6">
+        <div class="bg-light p-3 rounded">
+          <span class="text-muted small text-uppercase fw-semibold d-block">Receipt Information</span>
+          <div class="fs-6 fw-bold text-primary mt-1">{{ payment.receipt_number }}</div>
+          <div class="small text-muted"><strong>Payment Date:</strong> {{ payment.payment_date|date_format }}</div>
+          <div class="small text-muted"><strong>Invoice Ref:</strong> {{ payment.invoice.invoice_number if payment.invoice else 'N/A' }}</div>
+          <div class="small text-muted"><strong>Payment Method:</strong> {{ payment.payment_method }}</div>
+          <div class="small text-muted"><strong>Txn ID:</strong> {{ payment.transaction_id or 'Cash Transaction' }}</div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="bg-light p-3 rounded">
+          <span class="text-muted small text-uppercase fw-semibold d-block">Student Details</span>
+          <div class="fs-6 fw-bold text-dark mt-1">{{ payment.student.full_name }}</div>
+          <div class="small text-muted"><strong>Student ID:</strong> {{ payment.student.student_id_code }}</div>
+          <div class="small text-muted"><strong>CNIC:</strong> {{ payment.student.cnic }}</div>
+          {% set rm = payment.student.current_room %}
+          {% set hst = payment.student.current_hostel %}
+          <div class="small text-muted"><strong>Allocated:</strong> {{ hst.name if hst else 'N/A' }} - Rm {{ rm.room_number if rm else 'N/A' }}</div>
+          <div class="small text-muted"><strong>University:</strong> {{ payment.student.university_name[:24] }}...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Item Breakdown -->
+    <div class="table-responsive mb-4">
+      <table class="table table-bordered align-middle">
+        <thead class="bg-light">
+          <tr>
+            <th>Payment Description</th>
+            <th class="text-center" style="width: 140px;">Invoice Total</th>
+            <th class="text-end" style="width: 160px;">Amount Paid</th>
+            <th class="text-end" style="width: 150px;">Balance Due</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="fw-semibold text-dark">{{ payment.invoice.title if payment.invoice else 'Hostel Fee Payment' }}</div>
+              <small class="text-muted">Collected By: {{ payment.received_by }}</small>
+            </td>
+            <td class="text-center">{{ payment.invoice.total_amount|currency if payment.invoice else payment.amount|currency }}</td>
+            <td class="text-end fw-bold text-success">{{ payment.amount|currency }}</td>
+            <td class="text-end fw-semibold text-danger">{{ payment.invoice.balance_due|currency if payment.invoice else 'Rs. 0' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Callout Box -->
+    <div class="alert alert-success border-success text-center py-3 mb-5">
+      <span class="small text-uppercase fw-semibold text-success d-block">TOTAL AMOUNT RECEIVED (PKR)</span>
+      <h3 class="fw-bold mb-0 text-success">{{ payment.amount|currency }}</h3>
+    </div>
+
+    <!-- Signatures -->
+    <div class="row pt-4 text-center">
+      <div class="col-6">
+        <div class="border-top pt-2 mx-4 text-muted small">Resident Student Signature</div>
+      </div>
+      <div class="col-6">
+        <div class="border-top pt-2 mx-4 text-muted small">Accounts Officer / Authorized Stamp</div>
+      </div>
+    </div>
+
+    <div class="text-center mt-5 pt-3 border-top text-muted small" style="font-size: 0.75rem;">
+      * This is a computer-generated receipt issued by the Hostel Management System. Verified at {{ payment.created_at|datetime_format }}.
+    </div>
+  </div>
+</div>
+{% endblock %}

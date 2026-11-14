@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Record Payment{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-0 text-dark">Record Fee Payment</h4>
+    <p class="text-muted small mb-0">Record cash, bank transfer or online fee payments and issue official receipts.</p>
+  </div>
+  <a href="{{ url_for('fees.list_invoices') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left me-1"></i> Back to Invoices
+  </a>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card card-saas">
+      <div class="card-body p-4">
+        <form method="POST">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Select Pending Invoice *</label>
+            {{ form.invoice_id(class="form-select") }}
+            {% for e in form.invoice_id.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Payment Amount (PKR) *</label>
+              {{ form.amount(class="form-control", type="number", min="1", placeholder="Amount to collect") }}
+              {% for e in form.amount.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Payment Method *</label>
+              {{ form.payment_method(class="form-select") }}
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Payment Date *</label>
+              {{ form.payment_date(class="form-control", type="date") }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Bank / Online Transaction ID</label>
+              {{ form.transaction_id(class="form-control", placeholder="e.g. PK-RAAST-98218731") }}
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label small fw-semibold">Remarks / Deposit Details</label>
+            {{ form.remarks(class="form-control", rows=2, placeholder="e.g. Paid in full via Allied Bank branch deposit slip #9821") }}
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+            <a href="{{ url_for('fees.list_invoices') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+            {{ form.submit(class="btn btn-success px-5 shadow-sm fw-semibold") }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
