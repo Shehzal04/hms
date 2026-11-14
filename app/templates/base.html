@@ -32,58 +32,58 @@
       {% if current_user.is_authenticated and not current_user.is_student and not current_user.is_staff %}
         <!-- Administrative Navigation -->
         <div class="sidebar-heading">Core</div>
-        <a href="{{ url_for('dashboard.index') }}" class="nav-link-custom {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+        <a href="{{ url_for('dashboard.index') }}" class="nav-link-custom {% if request.endpoint and request.endpoint == 'dashboard.index' %}active{% endif %}">
           <i class="bi bi-grid-1x2-fill"></i> Dashboard
         </a>
 
         <div class="sidebar-heading">Hostel & Housing</div>
-        <a href="{{ url_for('hostels.list_hostels') }}" class="nav-link-custom {% if 'hostels' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('hostels.list_hostels') }}" class="nav-link-custom {% if request.endpoint and 'hostels' in request.endpoint %}active{% endif %}">
           <i class="bi bi-building"></i> Hostels
         </a>
-        <a href="{{ url_for('rooms.list_rooms') }}" class="nav-link-custom {% if 'rooms' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('rooms.list_rooms') }}" class="nav-link-custom {% if request.endpoint and 'rooms' in request.endpoint %}active{% endif %}">
           <i class="bi bi-door-open-fill"></i> Rooms & Beds
         </a>
-        <a href="{{ url_for('allocations.list_allocations') }}" class="nav-link-custom {% if 'allocations' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('allocations.list_allocations') }}" class="nav-link-custom {% if request.endpoint and 'allocations' in request.endpoint %}active{% endif %}">
           <i class="bi bi-key-fill"></i> Allocations
         </a>
 
         <div class="sidebar-heading">Residents</div>
-        <a href="{{ url_for('students.list_students') }}" class="nav-link-custom {% if 'students' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('students.list_students') }}" class="nav-link-custom {% if request.endpoint and 'students' in request.endpoint %}active{% endif %}">
           <i class="bi bi-people-fill"></i> Students
         </a>
-        <a href="{{ url_for('attendance.index') }}" class="nav-link-custom {% if 'attendance' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('attendance.index') }}" class="nav-link-custom {% if request.endpoint and 'attendance' in request.endpoint %}active{% endif %}">
           <i class="bi bi-calendar-check-fill"></i> Attendance
         </a>
-        <a href="{{ url_for('complaints.list_complaints') }}" class="nav-link-custom {% if 'complaints' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('complaints.list_complaints') }}" class="nav-link-custom {% if request.endpoint and 'complaints' in request.endpoint %}active{% endif %}">
           <i class="bi bi-exclamation-triangle-fill"></i> Complaints
           {% if pending_complaints_count > 0 %}
             <span class="badge bg-danger rounded-pill ms-auto">{{ pending_complaints_count }}</span>
           {% endif %}
         </a>
-        <a href="{{ url_for('visitors.list_visitors') }}" class="nav-link-custom {% if 'visitors' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('visitors.list_visitors') }}" class="nav-link-custom {% if request.endpoint and 'visitors' in request.endpoint %}active{% endif %}">
           <i class="bi bi-person-badge-fill"></i> Visitors
         </a>
 
         <div class="sidebar-heading">Finance & Services</div>
-        <a href="{{ url_for('fees.list_invoices') }}" class="nav-link-custom {% if 'fees' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('fees.list_invoices') }}" class="nav-link-custom {% if request.endpoint and 'fees' in request.endpoint %}active{% endif %}">
           <i class="bi bi-receipt"></i> Fee Invoices
         </a>
-        <a href="{{ url_for('mess.weekly_menu') }}" class="nav-link-custom {% if 'mess' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('mess.weekly_menu') }}" class="nav-link-custom {% if request.endpoint and 'mess' in request.endpoint %}active{% endif %}">
           <i class="bi bi-egg-fried"></i> Mess Menu
         </a>
-        <a href="{{ url_for('staff.list_employees') }}" class="nav-link-custom {% if 'staff' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('staff.list_employees') }}" class="nav-link-custom {% if request.endpoint and 'staff' in request.endpoint %}active{% endif %}">
           <i class="bi bi-person-workspace"></i> Staff & Duties
         </a>
 
         <div class="sidebar-heading">Intelligence & System</div>
-        <a href="{{ url_for('announcements.list_announcements') }}" class="nav-link-custom {% if 'announcements' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('announcements.list_announcements') }}" class="nav-link-custom {% if request.endpoint and 'announcements' in request.endpoint %}active{% endif %}">
           <i class="bi bi-megaphone-fill"></i> Notices
         </a>
-        <a href="{{ url_for('reports.index') }}" class="nav-link-custom {% if 'reports' in request.endpoint %}active{% endif %}">
+        <a href="{{ url_for('reports.index') }}" class="nav-link-custom {% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}">
           <i class="bi bi-file-earmark-bar-graph-fill"></i> Reports Hub
         </a>
         {% if current_user.is_super_admin %}
-          <a href="{{ url_for('settings.general_settings') }}" class="nav-link-custom {% if 'settings' in request.endpoint %}active{% endif %}">
+          <a href="{{ url_for('settings.general_settings') }}" class="nav-link-custom {% if request.endpoint and 'settings' in request.endpoint %}active{% endif %}">
             <i class="bi bi-gear-fill"></i> System Settings
           </a>
         {% endif %}
@@ -142,7 +142,7 @@
         </button>
         <span class="badge bg-light text-secondary border px-3 py-2 fw-medium">
           <i class="bi bi-calendar3 me-1 text-primary"></i> 
-          {{ (None)|date_format }}
+          {{ today_date|date_format }}
         </span>
       </div>
 

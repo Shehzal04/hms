@@ -49,7 +49,7 @@ def list_allocations():
 @role_required('Super Admin', 'Hostel Admin', 'Warden')
 def allocate_room():
     # Only students without active allocation
-    allocated_student_ids = db.session.query(RoomAllocation.student_id).filter_by(status='Active').subquery()
+    allocated_student_ids = db.session.query(RoomAllocation.student_id).filter_by(status='Active').scalar_subquery()
     unallocated_students = Student.query.filter(
         Student.status == 'Active',
         ~Student.id.in_(allocated_student_ids)

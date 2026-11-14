@@ -71,6 +71,7 @@ def create_app(config_name='default'):
     # Context Processors
     @app.context_processor
     def inject_global_data():
+        from datetime import date
         from flask_login import current_user
         notifs = []
         unread_count = 0
@@ -85,7 +86,8 @@ def create_app(config_name='default'):
             'app_name': 'HostelFlow HMS',
             'unread_notifs_count': unread_count,
             'recent_notifications': notifs,
-            'pending_complaints_count': pending_complaints_count
+            'pending_complaints_count': pending_complaints_count,
+            'today_date': date.today()
         }
 
     # Custom Jinja Filters
